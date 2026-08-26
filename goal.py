@@ -12,7 +12,7 @@ with dpg.window(tag='Goal'):
         print(dpg.get_value('New goal'))
 
     dpg.add_text('Hi, Artem')
-    theinput = dpg.add_input_text(label='string', default_value='Enter your name...', tag='New goal')
+    theinput = dpg.add_input_text(label='', hint='Enter your name...', tag='New goal')
     dpg.add_button(label='Save', callback=addgoal)
     dpg.add_selectable(label='Create a new app')
 
