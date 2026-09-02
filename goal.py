@@ -20,6 +20,8 @@ cursor.execute('SELECT * FROM goals')
 allentries = cursor.fetchall()
 
 viewid = ''
+picked_to_delete = ''
+goalstodelete = []
 
 dpg.create_context()
 
@@ -46,11 +48,15 @@ def opendetails(sender, app_data):
     allentries = cursor.fetchall()
     global viewid
     dpg.configure_item('modal_id', show=True)
-    pickedentry = allentries[int(sender) - 1]
-    viewid = pickedentry[0]
-    dpg.configure_item('Goal title', default_value=pickedentry[1])
-    dpg.configure_item('Goal details', default_value=pickedentry[2])
-    if pickedentry[3] == 'current':
+    for row in allentries:
+        if row[0] == int(sender):
+            viewid = row[0]
+            title = row[1]
+            details = row[2]
+            status = row[3]
+    dpg.configure_item('Goal title', default_value=title)
+    dpg.configure_item('Goal details', default_value=details)
+    if status == 'current':
         dpg.configure_item('marker', default_value=False)
     else:
         dpg.configure_item('marker', default_value=True)
@@ -60,9 +66,43 @@ def creategoal(sender, app_data):
     dpg.configure_item('New goal', default_value='')
     dpg.configure_item('New goal details', default_value='')
 
+def opendeletegoal(sender, app_data):
+    global goalstodelete
+    dpg.configure_item('modal_delete', show=True)
+    cursor.execute('SELECT * FROM goals')
+    allentries = cursor.fetchall()
+    goalstodelete = []
+    for row in allentries:
+        goalstodelete.append(row[1])
+    dpg.configure_item('deletelist', items=goalstodelete)
+
+def picktodelete(sender, app_data):
+    global picked_to_delete
+    picked_to_delete = app_data
+
+def deletegoal(sender, app_data):
+    global goalstodelete
+    global picked_to_delete
+    cursor.execute('DELETE FROM goals WHERE title = ?', (picked_to_delete,))
+    conn.commit()
+    dpg.delete_item('currentgoals', children_only=True)
+    dpg.delete_item('completedgoals', children_only=True)
+    cursor.execute('SELECT * FROM goals')
+    allentries = cursor.fetchall()
+    print(allentries)
+    for row in allentries:
+        if row[3] == 'current':
+            goaltag = str(row[0])
+            dpg.add_selectable(label=row[1], callback=opendetails, tag=goaltag, parent='currentgoals')
+        else:
+            goaltag = str(row[0])
+            dpg.add_selectable(label=row[1], callback=opendetails, tag=goaltag, parent='completedgoals')
+    dpg.configure_item('modal_delete', show=False)
+
 def windowexit(sender, app_data):
     dpg.configure_item('modal_create', show=False)
     dpg.configure_item('modal_id', show=False)
+    dpg.configure_item('modal_delete', show=False)
 
 def editgoal(sender, app_data):
     newtitle = dpg.get_value('Goal title')
@@ -103,7 +143,7 @@ with dpg.window(label='Create goal', modal=True, show=False, tag='modal_create',
         dpg.add_button(label='Cancel', callback=windowexit)
 
 # Window responsible for viewing/editing a goal. Appears after clicking on an existing goal.
-with dpg.window(label='View goal', modal=True, show=False, tag='modal_id', no_title_bar=True, width=400, height=200):
+with dpg.window(label='View goal', modal=True, show=False, tag='modal_id', no_title_bar=True, width=408, height=208):
     dpg.add_text('Viewing this goal...')
     dpg.add_separator()
     vtheinput = dpg.add_input_text(label='', default_value='', hint='Enter your goal...', tag='Goal title')
@@ -113,11 +153,20 @@ with dpg.window(label='View goal', modal=True, show=False, tag='modal_id', no_ti
         dpg.add_button(label='Cancel', callback=windowexit)
         dpg.add_checkbox(label='Mark complete', default_value=False, tag='marker')
     
+with dpg.window(label='Delete goal', modal=True, show=False, tag='modal_delete', no_title_bar=True, width=408, height=208):
+    dpg.add_text('Deleting a goal...')
+    dpg.add_separator()
+    dpg.add_listbox(items=['Test1', 'Test2', 'Test3'], tag='deletelist', num_items=8, callback=picktodelete)
+    with dpg.group(horizontal=True):
+        dpg.add_button(label='Delete goal', callback=deletegoal)
+        dpg.add_button(label='Cancel', callback=windowexit)
+
 # Main application window where goal groups and goals within are displayed, as well as the button to create a new goal.
 with dpg.window(tag='MAIN'):
 
     with dpg.group(tag='enterdata', horizontal=True):
         dpg.add_button(label='+ goal', callback=creategoal)
+        dpg.add_button(label='- goal', callback=opendeletegoal)
 
     with dpg.collapsing_header(label='Current goals', tag='currentgoals', default_open=True):
         for row in allentries:
