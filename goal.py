@@ -25,6 +25,12 @@ goalstodelete = []
 
 dpg.create_context()
 
+# with dpg.font_registry():
+#     with dpg.font('DMSans-Regular.ttf', 18, default_font=True) as default_font:
+#         pass
+
+# dpg.bind_font(default_font)
+
 def addgoal(sender, app_data):
     newgoal = dpg.get_value('New goal')
     newgoaldesc = dpg.get_value('New goal details')
@@ -133,7 +139,7 @@ def editgoal(sender, app_data):
     dpg.configure_item('modal_id', show=False)
 
 # Window responsible for creating a new goal. Appears after clicking on the '+ goal' button.
-with dpg.window(label='Create goal', modal=True, show=False, tag='modal_create', no_title_bar=True, width=400, height=200):
+with dpg.window(label='Create goal', modal=True, show=False, tag='modal_create', no_title_bar=True, width=408, height=288):
     dpg.add_text('Creating a goal...')
     dpg.add_separator()
     theinput = dpg.add_input_text(label='', hint='Enter your goal...', tag='New goal')
@@ -143,7 +149,7 @@ with dpg.window(label='Create goal', modal=True, show=False, tag='modal_create',
         dpg.add_button(label='Cancel', callback=windowexit)
 
 # Window responsible for viewing/editing a goal. Appears after clicking on an existing goal.
-with dpg.window(label='View goal', modal=True, show=False, tag='modal_id', no_title_bar=True, width=408, height=208):
+with dpg.window(label='View goal', modal=True, show=False, tag='modal_id', no_title_bar=True, width=408, height=288):
     dpg.add_text('Viewing this goal...')
     dpg.add_separator()
     vtheinput = dpg.add_input_text(label='', default_value='', hint='Enter your goal...', tag='Goal title')
@@ -153,7 +159,7 @@ with dpg.window(label='View goal', modal=True, show=False, tag='modal_id', no_ti
         dpg.add_button(label='Cancel', callback=windowexit)
         dpg.add_checkbox(label='Mark complete', default_value=False, tag='marker')
     
-with dpg.window(label='Delete goal', modal=True, show=False, tag='modal_delete', no_title_bar=True, width=408, height=208):
+with dpg.window(label='Delete goal', modal=True, show=False, tag='modal_delete', no_title_bar=True, width=408, height=288):
     dpg.add_text('Deleting a goal...')
     dpg.add_separator()
     dpg.add_listbox(items=['Test1', 'Test2', 'Test3'], tag='deletelist', num_items=8, callback=picktodelete)
